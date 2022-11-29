@@ -22,6 +22,7 @@ int onRecord();
 std::string ppsInput(std::string);
 std::string nameInput(int);
 void showModeText();
+void showBGMText();
 
 int mode = 0;
 bool showingStats = false;
@@ -268,6 +269,7 @@ int endScreen() {
         }
 
         showModeText();
+		showBGMText();
 
         aprint("Play", 12, 11);
         aprint("Again", 14, 12);
@@ -660,6 +662,7 @@ int pauseMenu(){
     igt = game->inGameTimer;
 
     showModeText();
+    showBGMText();
 
     bool shown = false;
 
@@ -721,6 +724,7 @@ int pauseMenu(){
                     sleep();
                     showStats(showingStats, totalTime, ppsStr);
                     showModeText();
+					showBGMText();
                 } else if (n == 4) {
                     REG_BLDCNT = prevBld;
                     sfx(SFX_MENUCANCEL);
@@ -818,6 +822,12 @@ int pauseMenu(){
             clearSmallText();
             showStats(showingStats, totalTime, ppsStr);
         }
+		
+		if(key == KEY_R){
+			playNextSong();
+			aprintClearLine(19);
+			showBGMText();
+		}
 
         if(!shown){
             shown = true;
@@ -1053,4 +1063,9 @@ void showModeText(){
         if(bigMode)
             aprintColor("BIG MODE",22,counter++,0);
     }
+}
+
+void showBGMText(){
+	std::string str = getSongTitle();
+	aprintColor(str,30-str.size(), 19, 0);
 }

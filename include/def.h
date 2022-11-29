@@ -243,6 +243,7 @@ extern void gameLoop();
 extern void playSong(int,int);
 extern void playSongRandom(int);
 extern void playNextSong();
+extern std::string getSongTitle();
 extern void settingsText();
 extern void songListMenu();
 extern void graphicTest();
