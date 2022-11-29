@@ -58,6 +58,7 @@ int shake = 0;
 int gameSeconds;
 
 bool pause = false;
+bool proSetting = false;
 
 int marathonClearTimer = 20;
 
@@ -218,26 +219,26 @@ int main(void) {
         if(!playAgain && !journeyLevelUp){
             startScreen();
         }else if(journeyLevelUp){
-			journeyLevelUp = false;
-			if (journeySaveExists){		
-				int goal = game->goal;
-				int training = game->trainingMode;
-				int rs = game->rotationSystem;
-				
-				delete game;
-					
-				game = new Game(*journeySave);				
-				game->setGoal(goal);
-				game->setTuning(getTuning());
-				game->setTrainingMode(training);
-				game->pawn.big = bigMode;
-				game->bTypeHeight = goalSelection;
-				game->setSubMode(subMode);
-				game->setRotationSystem(rs);
-				
-				resumeJourney = true;
-			}
-		}else{
+            journeyLevelUp = false;
+            if (journeySaveExists){
+                int goal = game->goal;
+                int training = game->trainingMode;
+                int rs = game->rotationSystem;
+                
+                delete game;
+                    
+                game = new Game(*journeySave);
+                game->setGoal(goal);
+                game->setTuning(getTuning());
+                game->setTrainingMode(training);
+                game->pawn.big = bigMode;
+                game->bTypeHeight = goalSelection;
+                game->setSubMode(subMode);
+                game->setRotationSystem(rs);
+                
+                resumeJourney = true;
+            }
+        }else{
             playAgain = false;
 
             int goal = game->goal;
@@ -266,9 +267,9 @@ std::string timeToString(int frames) {
     int seconds = t % 60;
     int minutes = t / 60;
 
-	char res[30];
+    char res[30];
 
-	posprintf(res,"%02d:%02d:%02d",minutes,seconds,millis);
+    posprintf(res,"%02d:%02d:%02d",minutes,seconds,millis);
 
     std::string result = "";
 
@@ -315,6 +316,135 @@ void reset() {
         memcpy16(gradientTable,defaultGradient_bin,defaultGradient_bin_size/2);
     else
         setGradient(g);
+}
+
+std::string ppsInput(std::string ppsStr) {
+    
+    // std::string result = savefile->ppsThreshold;
+    
+    std::string result = ppsStr;
+    
+    int cursor = 0;
+
+    const static int inputHeight = 10;
+
+    int timer = 0;
+
+    int das = 0;
+    int maxDas = 12;
+
+    int arr = 0;
+    int maxArr = 5;
+
+    bool onDone = false;
+
+    while (1) {
+        VBlankIntrWait();
+
+        aprint("PPS Threshold: ", 8, inputHeight - 2);
+
+        aprint("DONE", 14, 16);
+
+        key_poll();
+
+        u16 key = key_hit(KEY_FULL);
+
+        aprint(result, 13, inputHeight);
+
+        if (!onDone) {
+            if (key == KEY_A || key == KEY_RIGHT) {
+                if (cursor < 3)
+                    cursor++;
+                if (cursor == 1)
+                    cursor = 2;               
+                sfx(SFX_MENUMOVE);                
+            }
+
+            if (key == KEY_B || key == KEY_LEFT) {
+                if (cursor > 0)
+                    cursor--;
+                if (cursor == 1)
+                    cursor = 0;                
+                sfx(SFX_MENUMOVE);
+            }
+
+            if (key == KEY_START) {
+                onDone = true;
+                sfx(SFX_MENUCONFIRM);
+            }
+
+            char curr = result.at(cursor);
+            if (key == KEY_DOWN) {
+                if (curr == '0')
+                    result[cursor] = '9';
+                else if (curr > '0')
+                    result[cursor] = curr - 1;
+
+                sfx(SFX_MENUMOVE);
+            } else if (key == KEY_UP) {
+                if (curr == '9')
+                    result[cursor] = '0';
+                else if (curr < '9')
+                    result[cursor] = curr + 1;
+                sfx(SFX_MENUMOVE);
+            } else if (key_is_down(KEY_UP) || key_is_down(KEY_DOWN)) {
+                if (das < maxDas)
+                    das++;
+                else {
+                    if (arr++ > maxArr) {
+                        arr = 0;
+                        if (key_is_down(KEY_DOWN)) {
+                            if (curr == '0')
+                                result[cursor] = '9';
+                            else if (curr == '9')
+                                result[cursor] = '0';
+                            else if (curr > '0')
+                                result[cursor] = curr - 1;
+                        } else {
+                            if (curr == '9')
+                                result[cursor] = '0';
+                            else if (curr == '0')
+                                result[cursor] = '9';
+                            else if (curr < '9')
+                                result[cursor] = curr + 1;
+                        }
+                        sfx(SFX_MENUMOVE);
+                    }
+                }
+            } else {
+                das = 0;
+                if (timer++ > 19)
+                    timer = 0;
+
+                if (timer < 10)
+                    aprint("_", 13 + cursor, inputHeight);
+            }
+
+            aprint(" ", 12, 16);
+        } else {
+            aprint(">", 12, 16);
+
+            if (key == KEY_A || key == KEY_START) {
+                sfx(SFX_MENUCONFIRM);
+                break;
+            }
+
+            if (key == KEY_B) {
+                onDone = false;
+                sfx(SFX_MENUCANCEL);
+            }
+        }
+    }
+
+    clearText();
+
+    if (result.size() >= 4)
+        result = result.substr(0, 4);
+    
+    // for (int i = 0; i < 8; i++)
+        // savefile->ppsThreshold[i] = result.at(i);
+
+    return result;
 }
 
 std::string nameInput(int place) {
@@ -912,8 +1042,8 @@ void setGradient(int color){
 }
 
 void sfx(int s){
-	mm_sfxhand h = mmEffect(s);
-	mmEffectVolume(h, 255 * (float)savefile->settings.sfxVolume / 10);
+    mm_sfxhand h = mmEffect(s);
+    mmEffectVolume(h, 255 * (float)savefile->settings.sfxVolume / 10);
 
     if((s == SFX_PLACE) && game->zoneTimer){
         mmEffectRate(h,512);

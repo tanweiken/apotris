@@ -276,6 +276,7 @@ extern void progressBar();
 
 extern int endScreen();
 extern int pauseMenu();
+extern int proSettingMenu();
 extern void countdown();
 extern void screenShake();
 
@@ -386,6 +387,9 @@ extern int level;
 extern TILE* customSkin;
 
 extern bool proMode;
+
+extern bool proSetting;
+extern FIXED ppsThreshold;
 
 extern bool gradientEnabled;
 

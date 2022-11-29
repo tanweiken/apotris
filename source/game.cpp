@@ -300,8 +300,8 @@ void checkSounds() {
         if(game->gameMode == MASTER){
             maxClearTimer = game->maxClearDelay;
         }
-		else if(game->gameMode == MARATHON){			
-			journeyLevelUp = true;
+        else if(game->gameMode == MARATHON){
+            journeyLevelUp = true;
         }
     }
 
@@ -804,14 +804,21 @@ void showQueue() {
 }
 
 void control() {
-    if (pause)
+    if (pause || proSetting)
         return;
 
     key_poll();
 
     Keys k = savefile->settings.keys;
 
-    if (key_hit(KEY_START) && !multiplayer && !eventPauseTimer) {
+    if ((key_is_down(KEY_L) || key_is_down(KEY_R)) && key_hit(KEY_START) && proMode && !multiplayer && !eventPauseTimer) {
+        sfx(SFX_MENUCONFIRM);
+        proSetting = true;
+        mmPause();
+        clearText();
+        update();
+    }
+    else if (key_hit(KEY_START) && !multiplayer && !eventPauseTimer) {
         sfx(SFX_MENUCONFIRM);
         pause = true;
         mmPause();
@@ -1011,6 +1018,10 @@ void showPPS(){
     FIXED t = (gameSeconds + game->eventTimer) * float2fx(0.0167f);
 
     FIXED pps;
+    
+    //set palette
+    memset16(&pal_bg_mem[15*16+4],0x03e0,1); //green
+    memset16(&pal_bg_mem[15*16+5],0x001f,1); //red
 
     if(t <= 0){
         pps = 0;
@@ -1029,8 +1040,13 @@ void showPPS(){
         fractional &= 0xff;
     }
 
-	memset32(&tile_mem[2][113],0,8*3);
-    aprints(str,25,0,2);
+    memset32(&tile_mem[2][113],0,8*3);
+    if (pps >= ppsThreshold){
+        aprints(str,25,0,4);
+    }
+    else{
+        aprints(str,25,0,5);
+    }
 
     aprints("PPS:",0,0,2);
 }
@@ -1141,12 +1157,12 @@ void gameLoop(){
 
     oam_copy(oam_mem, obj_buffer, 128);
 
-	if (!resumeJourney){
-		countdown();
-	}
-	else{
-		resumeJourney = false;
-	}
+    if (!resumeJourney){
+        countdown();
+    }
+    else{
+        resumeJourney = false;
+    }
 
     if (!(game->gameMode == TRAINING)) {
         playSongRandom(1);
@@ -1166,7 +1182,7 @@ void gameLoop(){
 
     while (1) {
         diagnose();
-        if (!game->lost && !pause && !game->eventLock) {
+        if (!game->lost && !pause && !proSetting && !game->eventLock) {
             game->update();
         }
         handleMultiplayer();
@@ -1253,11 +1269,16 @@ void gameLoop(){
                 playAgain = false;
         }
 
-        if (pause){
+        if (pause || proSetting){
             Keys k = savefile->settings.keys;
 
-            if(pauseMenu()){
+            if(pause && pauseMenu()){
                 pause = false;
+                return;
+            }
+
+            if(proSetting && proSettingMenu()){
+                proSetting = false;
                 return;
             }
 
@@ -1305,18 +1326,18 @@ void gameLoop(){
             zoneFlash();
 
         sqran(qran() % frameCounter);
-		
-		if(!game->eventLock && journeyLevelUp){
-			// flashTimer = flashTimerMax;
-			// journeyFlash();
-			
-			setJourneyGraphics(savefile, game->level);
+        
+        if(!game->eventLock && journeyLevelUp){
+            // flashTimer = flashTimerMax;
+            // journeyFlash();
+            
+            setJourneyGraphics(savefile, game->level);
 
-			delete journeySave;
-			journeySave = new Game(*game);
-			journeySaveExists = true;
-			return;
-		}
+            delete journeySave;
+            journeySave = new Game(*game);
+            journeySaveExists = true;
+            return;
+        }
     }
 }
 
@@ -2345,46 +2366,46 @@ void journeyFlash(){
 }
 
 void setJourneyGraphics(Save *save, int level){
-	switch (level){
-		case 1:
-			save->settings.backgroundGradient = 0x7dc8;
-			save->settings.backgroundGrid = 5;
-			save->settings.skin = 11;
-			save->settings.shadow = 3;
-			save->settings.palette = 5;
-			save->settings.colors = 1;
-			save->settings.edges = true;
-			save->settings.lightMode = false;
-			break;
-		case 2:
-			save->settings.backgroundGradient = RGB15(0,0,0);
-			save->settings.backgroundGrid = 0;
-			save->settings.skin = 0;
-			save->settings.shadow = 3;
-			save->settings.palette = 0;
-			save->settings.colors = 1;
-			save->settings.edges = false;
-			save->settings.lightMode = false;
-			break;
-		case 3:
-			save->settings.backgroundGradient = RGB15(0,0,0);
-			save->settings.backgroundGrid = 0;
-			save->settings.skin = 0;
-			save->settings.shadow = 3;
-			save->settings.palette = 0;
-			save->settings.colors = 4;
-			save->settings.edges = false;
-			save->settings.lightMode = false;
-			break;
-		default:
-			save->settings.edges = true;
-			save->settings.backgroundGrid = qran() % (MAX_BACKGROUNDS - 1);
-			save->settings.skin = qran() % (MAX_SKINS - 1);
-			save->settings.palette = qran() % 6;
-			save->settings.shadow = qran() % (MAX_SHADOWS - 1);
-			save->settings.lightMode = (qran() % 2 == 0);
-			save->settings.colors = qran() % (MAX_COLORS - 1);
-			save->settings.backgroundGradient = RGB15(qran() % 31, qran() % 31, qran() % 31);
-			break;
-	}
+    switch (level){
+        case 1:
+            save->settings.backgroundGradient = 0x7dc8;
+            save->settings.backgroundGrid = 5;
+            save->settings.skin = 11;
+            save->settings.shadow = 3;
+            save->settings.palette = 5;
+            save->settings.colors = 1;
+            save->settings.edges = true;
+            save->settings.lightMode = false;
+            break;
+        case 2:
+            save->settings.backgroundGradient = RGB15(0,0,0);
+            save->settings.backgroundGrid = 0;
+            save->settings.skin = 0;
+            save->settings.shadow = 3;
+            save->settings.palette = 0;
+            save->settings.colors = 1;
+            save->settings.edges = false;
+            save->settings.lightMode = false;
+            break;
+        case 3:
+            save->settings.backgroundGradient = RGB15(0,0,0);
+            save->settings.backgroundGrid = 0;
+            save->settings.skin = 0;
+            save->settings.shadow = 3;
+            save->settings.palette = 0;
+            save->settings.colors = 4;
+            save->settings.edges = false;
+            save->settings.lightMode = false;
+            break;
+        default:
+            save->settings.edges = true;
+            save->settings.backgroundGrid = qran() % (MAX_BACKGROUNDS - 1);
+            save->settings.skin = qran() % (MAX_SKINS - 1);
+            save->settings.palette = qran() % 6;
+            save->settings.shadow = qran() % (MAX_SHADOWS - 1);
+            save->settings.lightMode = (qran() % 2 == 0);
+            save->settings.colors = qran() % (MAX_COLORS - 1);
+            save->settings.backgroundGradient = RGB15(qran() % 31, qran() % 31, qran() % 31);
+            break;
+    }
 }

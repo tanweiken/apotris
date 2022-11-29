@@ -19,6 +19,7 @@ void endAnimation();
 void showScore();
 void showStats(bool, std::string, std::string);
 int onRecord();
+std::string ppsInput(std::string);
 std::string nameInput(int);
 void showModeText();
 
@@ -29,6 +30,9 @@ bool saveExists = false;
 Tetris::Game* quickSave;
 
 int igt = 0;
+
+FIXED ppsThreshold = 0;
+std::string ppsThresholdStr = "0.00";
 
 const std::string modeStrings[11] = {
     "Marathon",
@@ -417,17 +421,17 @@ void endAnimation() {
 
     // u16*dest,*dest2;
     // for(int i = 19; i >= 0; i--){
-    // 	dest = (u16*)se_mem[25];
-    // 	dest += i * 32;
+    //     dest = (u16*)se_mem[25];
+    //     dest += i * 32;
 
-    // 	dest2 = (u16*)se_mem[26];
-    // 	dest2 += i * 32;
+    //     dest2 = (u16*)se_mem[26];
+    //     dest2 += i * 32;
 
-    // 	// int timer = 0;
-    // 	VBlankIntrWait();
+    //     // int timer = 0;
+    //     VBlankIntrWait();
 
-    // 	for(int j = 0; j < 32; j++)
-    // 		*dest++ = *dest2++ = 0;
+    //     for(int j = 0; j < 32; j++)
+    //         *dest++ = *dest2++ = 0;
     // }
 
     REG_BG0HOFS = 0;
@@ -551,6 +555,64 @@ void showStats(bool moreStats, std::string time, std::string pps) {
     if(game->statTracker.maxZonedLines > 0){
         aprints("Max MultiClear: " + std::to_string(game->statTracker.maxZonedLines), 0, 7*counter++, 2);
     }
+}
+
+int proSettingMenu(){    
+    clearText();
+    setSmallTextArea(110, 1, 1, 10, 20);
+
+    int prevBld = REG_BLDCNT;
+    REG_BLDCNT = (1 << 6) + (0b11111 << 9) + (1);
+    memset16(&se_mem[25], 12+4*0x1000 * (savefile->settings.lightMode), 32 * 20);
+
+    REG_BG0HOFS = 0;
+    REG_BG0VOFS = 0;
+
+    //hide Sprites
+    hideMinos();
+    obj_hide(&obj_buffer[23]); //hide meter
+    obj_hide(&obj_buffer[24]); //hide finesse combo counter
+    for(int i = 0; i < 3; i++)
+        obj_hide(&obj_buffer[16+i]);
+
+    oam_copy(oam_mem, obj_buffer, 128);
+
+    if (ppsThresholdStr == "0.00"){
+        //calculate pps
+        FIXED t = gameSeconds * float2fx(0.0167f);
+        FIXED pps = 0;
+        if(t > 0)
+            pps =  fxdiv(int2fx(game->pieceCounter),(t));
+
+        std::string ppsStr = std::to_string(fx2int(pps)) + ".";
+
+        int fractional = pps & 0xff;
+        for(int i = 0; i < 2; i++){
+            fractional *= 10;
+            ppsStr += '0' + (fractional >> 8);
+            fractional &= 0xff;
+        }
+        
+        ppsThresholdStr = ppsInput(ppsStr);
+    }
+    else{
+        ppsThresholdStr = ppsInput(ppsThresholdStr);
+    }
+    
+    ppsThreshold = float2fx(stof(ppsThresholdStr));
+    
+    sfx(SFX_MENUCONFIRM);
+    clearText();
+    update();
+    proSetting = false;
+    mmResume();
+
+    REG_BLDCNT = prevBld;
+    memset16(&se_mem[25], 0 , 32 * 20);
+    showBackground();
+    setSmallTextArea(110, 3, 7, 9, 10);
+
+    return 0;
 }
 
 int pauseMenu(){
