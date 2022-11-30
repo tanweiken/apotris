@@ -902,6 +902,19 @@ void setPalette(){
         //set frame color
         memcpy16(&pal_obj_mem[8 * 16], &palette[1][color * 16], 16);
         memcpy16(&pal_bg_mem[8 * 16], &palette[1][color * 16], 16);
+    }else if(savefile->settings.colors == 7){
+        for(int i = 0; i < 9; i++){
+            memcpy16(&pal_bg_mem[i*16+1], &palette[n][color * 16],4);
+            memcpy16(&pal_obj_mem[i*16+1], &palette[n][color * 16],4);
+        }
+
+        if(!savefile->settings.lightMode){
+            memset16(&pal_bg_mem[7], 0x7fff,2);
+            memset16(&pal_obj_mem[7], 0x7fff,2);
+        }else{
+            memset16(&pal_bg_mem[7], 0x0421,2);
+            memset16(&pal_obj_mem[7], 0x0421,2);
+        }	
     }else{
         //set frame color
         memcpy16(&pal_obj_mem[8 * 16], &palette[n][color * 16], 16);

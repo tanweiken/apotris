@@ -562,6 +562,9 @@ void showPawn() {
 
     int n = game->pawn.current;
 
+    int settingColors = (savefile->settings.colors < 2)?savefile->settings.colors:0;
+    int settingPalette = savefile->settings.palette + 2 * (savefile->settings.palette > 6);
+
     int blend = 0;
 
     if(game->maxLockTimer > 1)
@@ -579,6 +582,8 @@ void showPawn() {
                 clr_fade((COLOR*)&arsPalette[0][n], 0x0000, &pal_obj_mem[11 * 16+1], 4, blend);
             }else if(savefile->settings.colors == 6){
                 clr_fade((COLOR*)&arsPalette[1][n], 0x0000, &pal_obj_mem[11 * 16+1], 4, blend);
+            }else if(savefile->settings.colors == 7){
+                clr_fade_fast((COLOR*)&palette[settingColors][settingPalette * 16], 0x0000, &pal_obj_mem[11 * 16+1], 4, blend);
             } else
                 clr_fade_fast((COLOR*)&palette[savefile->settings.colors][n * 16], 0x0000, &pal_obj_mem[11 * 16], 8, blend);
         }else{
@@ -592,6 +597,8 @@ void showPawn() {
                 clr_adj_brightness(&pal_obj_mem[11 * 16+1], (COLOR*)&arsPalette[0][n], 4, int2fx(blend) >> 5);
             }else if(savefile->settings.colors == 6){
                 clr_adj_brightness(&pal_obj_mem[11 * 16+1], (COLOR*)&arsPalette[1][n], 4, int2fx(blend) >> 5);
+            }else if(savefile->settings.colors == 7){
+                clr_adj_brightness(&pal_obj_mem[11 * 16+1], (COLOR*)&palette[settingColors][settingPalette * 16], 4, int2fx(blend) >> 5);
             }else
                 clr_adj_brightness(&pal_obj_mem[11 * 16], (COLOR*)&palette[savefile->settings.colors][n * 16], 8, int2fx(blend) >> 5);
         }
@@ -645,6 +652,9 @@ void showShadow() {
     }
 
     int n = game->pawn.current;
+	
+    int settingColors = (savefile->settings.colors < 2)?savefile->settings.colors:0;
+    int settingPalette = savefile->settings.palette + 2 * (savefile->settings.palette > 6);
 
     if(!game->zoneTimer){
         if (!savefile->settings.lightMode){
@@ -658,6 +668,8 @@ void showShadow() {
                 clr_fade((COLOR*)&arsPalette[0][n], 0x0000, &pal_obj_mem[10 * 16+1], 4, (14) * bld);
             }else if(savefile->settings.colors == 6){
                 clr_fade((COLOR*)&arsPalette[1][n], 0x0000, &pal_obj_mem[10 * 16+1], 4, (14) * bld);
+            }else if(savefile->settings.colors == 7){
+                clr_fade_fast((COLOR*)&palette[settingColors][settingPalette * 16], 0x0000, &pal_obj_mem[10 * 16+1], 4, (14) * bld);
             } else
                 clr_fade_fast((COLOR*)&palette[savefile->settings.colors][n * 16], 0x0000, &pal_obj_mem[10 * 16], 8, (14) * bld);
         }else{
@@ -671,6 +683,8 @@ void showShadow() {
                 clr_adj_brightness(&pal_obj_mem[10 * 16+1], (COLOR*)&arsPalette[0][n], 4, float2fx(0.25));
             }else if(savefile->settings.colors == 6){
                 clr_adj_brightness(&pal_obj_mem[10 * 16+1], (COLOR*)&arsPalette[1][n], 4, float2fx(0.25));
+            }else if(savefile->settings.colors == 7){
+                clr_adj_brightness(&pal_obj_mem[10 * 16+1], (COLOR*)&palette[settingColors][settingPalette * 16], 4, float2fx(0.25));
             }else
                 clr_adj_brightness(&pal_obj_mem[10 * 16], (COLOR*)&palette[savefile->settings.colors][n * 16], 8, float2fx(0.25));
         }
