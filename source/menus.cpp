@@ -269,7 +269,7 @@ int endScreen() {
         }
 
         showModeText();
-		showBGMText();
+        // showBGMText();
 
         aprint("Play", 12, 11);
         aprint("Again", 14, 12);
@@ -372,6 +372,12 @@ int endScreen() {
             clearSmallText();
             showStats(showingStats, totalTime, ppsStr);
         }
+        
+        // if(key == KEY_R){
+            // playNextSong();
+            // aprintClearLine(19);
+            // showBGMText();
+        // }
     }
 
     REG_BLDCNT = prevBld;
@@ -724,7 +730,7 @@ int pauseMenu(){
                     sleep();
                     showStats(showingStats, totalTime, ppsStr);
                     showModeText();
-					showBGMText();
+                    showBGMText();
                 } else if (n == 4) {
                     REG_BLDCNT = prevBld;
                     sfx(SFX_MENUCANCEL);
@@ -822,12 +828,12 @@ int pauseMenu(){
             clearSmallText();
             showStats(showingStats, totalTime, ppsStr);
         }
-		
-		if(key == KEY_R){
-			playNextSong();
-			aprintClearLine(19);
-			showBGMText();
-		}
+        
+        if(key == KEY_R){
+            playNextSong();
+            aprintClearLine(19);
+            showBGMText();
+        }
 
         if(!shown){
             shown = true;
@@ -1066,6 +1072,6 @@ void showModeText(){
 }
 
 void showBGMText(){
-	std::string str = getSongTitle();
-	aprintColor(str,30-str.size(), 19, 0);
+    std::string str = getSongTitle();
+    aprintColor(str,30-str.size(), 19, 0);
 }
